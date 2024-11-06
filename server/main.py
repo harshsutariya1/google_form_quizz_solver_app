@@ -1,12 +1,25 @@
 from fastapi import FastAPI
 import requests
 from bs4 import BeautifulSoup
+from fastapi.middleware.cors import CORSMiddleware
+from openai import OpenAI
 
 app = FastAPI()
+# client = OpenAI()
+
+# CORS Middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins, or specify your web app's URL for better security
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/get_quiz_data")
 def get_quiz_data(google_form_link: str = "https://forms.gle/QTovj8DYWRXAQdu67"):
-    quiz_data = []
+    
+    header_tag = {'div':'ahS2Le'}
     question_container_tag = {'div':'geS5n'}
     question_tag = {'span':'M7eMe'}
     options_list_tag = {'div':'SG0AAe'}
@@ -20,6 +33,14 @@ def get_quiz_data(google_form_link: str = "https://forms.gle/QTovj8DYWRXAQdu67")
 
         if response.status_code == 200:
             soup = BeautifulSoup(response.content, 'html.parser')
+            
+            # get header text
+            header = soup.find('div', class_=header_tag['div']).text
+            
+            quiz_data = [{
+                'form_link': google_form_link,
+                'header': header,
+            }]
             
             # Checking the div classes where questions and options are located.
             questions_containers = soup.find_all('div', class_=question_container_tag['div'])
@@ -74,3 +95,22 @@ def get_quiz_data(google_form_link: str = "https://forms.gle/QTovj8DYWRXAQdu67")
 
     print("Returned: \n",quiz_data)
     return quiz_data
+
+@app.get("/generate_response")
+def generate_response():
+    print("Generating answer from chat gpt")
+    # completion = client.chat.completions.create(
+    #     model="gpt-4o",
+    #     messages=[
+    #         {"role": "system", "content": "You are a helpful assistant."},
+    #         {
+    #             "role": "user",
+    #             "content": "Hello."
+    #         }
+    #     ]
+    # )
+
+    # print(completion.choices[0].message)
+    
+    # sample response
+    return ["", "", "true", "No"]
