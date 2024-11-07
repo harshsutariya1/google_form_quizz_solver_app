@@ -1,16 +1,16 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
 import requests
 from bs4 import BeautifulSoup
 from fastapi.middleware.cors import CORSMiddleware
 from openai import OpenAI
 
 app = FastAPI()
-# client = OpenAI()
 
 # CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins, or specify your web app's URL for better security
+    allow_origins=["*"],  # Allow all origins, 
+    # or specify your web app's URL for better security
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -54,9 +54,9 @@ def get_quiz_data(google_form_link: str = "https://forms.gle/QTovj8DYWRXAQdu67")
                     # Extract question
                     question:str = question_container.find('span', class_=question_tag['span']).text.strip()
                     if question:
-                        print("Question:", question)
+                        print("Question Found")
                     else:
-                        print("Question not found.")
+                        print("Question not Found.")
                         continue
                     
                     # Extract list of options
@@ -68,9 +68,9 @@ def get_quiz_data(google_form_link: str = "https://forms.gle/QTovj8DYWRXAQdu67")
                             options_list = options_div.find_all('div', class_=option_tag['div'])
                             if options_list:
                                 for option in options_list:
-                                    print("Option:", option.text.strip(),)
+                                    # print("Option:", option.text.strip(),)
                                     options.append(option.text.strip())
-                                print(options)
+                                # print(options)
                             else:
                                 print("Options list not found.")
                         else:
@@ -93,24 +93,78 @@ def get_quiz_data(google_form_link: str = "https://forms.gle/QTovj8DYWRXAQdu67")
     except Exception as error:
         print("An error occurred:", error)
 
-    print("Returned: \n",quiz_data)
+    # print("Returned: \n",quiz_data)
     return quiz_data
 
-@app.get("/generate_response")
-def generate_response():
-    print("Generating answer from chat gpt")
-    # completion = client.chat.completions.create(
-    #     model="gpt-4o",
-    #     messages=[
-    #         {"role": "system", "content": "You are a helpful assistant."},
-    #         {
-    #             "role": "user",
-    #             "content": "Hello."
-    #         }
-    #     ]
-    # )
 
-    # print(completion.choices[0].message)
+@app.post("/generate_response")
+async def generate_response(request: Request):
+    data = await request.json()  # Parse JSON data
+    openAiModel = data.get('openAiModel', '')
+    print("Ai Model: ",openAiModel)
+    client = OpenAI(
+        api_key= data.get('openAiApiKey', '')
+    )
+    print("Generating answers from chat gpt")
     
-    # sample response
-    return ["", "", "true", "No"]
+    questions = data.get("questions", [])
+    # print("Question to answer:", questions)
+
+    # Initialize the list to store answers
+    answers = []
+    total_tokens = 0
+    prompt_tokens = 0
+    completion_token = 0
+
+    for index, question in enumerate(questions):
+        try:
+             # Extract question text and options
+            question_text = question.get('question', "")
+            options = question.get('options', [])
+            
+            # Format the prompt string
+            if options != []:
+                prompt = f"Question: {question_text}. Options: {', '.join(options)}"
+            else:
+                prompt = f"Question: {question_text}"
+
+            # print(f"Prompt for ChatGPT: {prompt}")
+            
+            # Generate answer for each question
+            completion = client.chat.completions.create(
+                # model="gpt-3.5-turbo-0125",
+                model= openAiModel,
+                messages=[
+                    {"role": "system", "content": "you will get a question with options, return answer in one line or return correct option with description in one line, give funny answer for personal questions."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0,
+            )
+            
+            # Append answer to the list
+            answer = completion.choices[0].message.content
+            if answer:
+                print(f"\nGot answer for question {index + 1}: {answer}\n")
+            answers.append(answer)
+            
+            # Access the token usage information
+            usage = completion.usage
+            total_tokens += usage.total_tokens
+            prompt_tokens += usage.prompt_tokens
+            completion_token += usage.completion_tokens
+            
+            # print(f"Question: {question_text}")
+            # print(f"Answer: {answer}\n")
+
+        except Exception as e:
+            print(f"Error generating answer for question '{question}': {e}")
+            raise HTTPException(status_code=500, detail="Error generating response")
+
+    print("Prompt tokens:", prompt_tokens)
+    print("Completion tokens:",completion_token)
+    print("Total tokens:", total_tokens)
+    answers.append(total_tokens)
+    print("Ai Model Used:", openAiModel, '\n')
+    
+    # Return the list of answers
+    return answers

@@ -19,10 +19,15 @@ Widget formDataTileShort(
       );
     },
     child: Container(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.only(
+        top: 10,
+        right: 10,
+        left: 10,
+      ),
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        border: Border.all(),
+        color: Colors.grey[200],
+        border: Border.all(color: Colors.grey),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Stack(
@@ -40,8 +45,12 @@ Widget formDataTileShort(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "Header: ${quizData[0]['header']}",
-                style: Theme.of(context).textTheme.headlineMedium,
+                "${quizData[0]['header']}",
+                // style: Theme.of(context).textTheme.headlineMedium,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 22,
+                ),
               ),
               Text("No of Questions: ${questions.length}"),
               const Divider(),
@@ -50,8 +59,28 @@ Widget formDataTileShort(
                 var question = entry.value;
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 2),
-                  child: Text(
-                      "Question ${index + 1}: ${(index > 2) ? " . . ." : question['question']}"),
+                  child: (index < 2)
+                      ? Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(
+                                  text: "Question ${index + 1}:",
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                  )),
+                              TextSpan(
+                                text: "  ${question['question']}",
+                                style: const TextStyle(),
+                              ),
+                            ],
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        )
+                      : (index < 3)
+                          ? const Text(" . . .")
+                          : null,
                 );
               }),
             ],
@@ -75,13 +104,11 @@ Widget formDataTileLong(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Header: ${formData[0]['header']}",
+            "${formData[0]['header']}",
             style: Theme.of(context).textTheme.headlineLarge,
           ),
           Text("\nNo of Questions: ${questions.length}"),
-          const Divider(
-            thickness: 2,
-          ),
+          const Divider(thickness: 2),
           const SizedBox(height: 10),
           ...questions.asMap().entries.map((entry) {
             int index = entry.key;
@@ -110,15 +137,49 @@ Widget formDataTileLong(
                       style: Theme.of(context).textTheme.titleMedium,
                       softWrap: true,
                     ),
-                    Text(
-                      "Options: ${question['options'] ?? "NA"}",
-                      style: Theme.of(context).textTheme.titleMedium,
+                    const Text(
+                      "Options:",
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      softWrap: true,
+                    ),
+                    ...question['options'].asMap().entries.map((entry) {
+                      // int index = entry.key;
+                      var option = entry.value;
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 5),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            const Icon(
+                              Icons.circle,
+                              size: 18,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(width: 20),
+                            Text(
+                              option,
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                    const Text(
+                      "Answer: ",
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                      ),
                       softWrap: true,
                     ),
                     Text(
                       "${question['answer']}".isEmpty
-                          ? "Answer: NA"
-                          : "Answer: ${question['answer']}",
+                          ? "NA"
+                          : "${question['answer']}",
                       style: Theme.of(context).textTheme.titleMedium,
                       softWrap: true,
                     ),

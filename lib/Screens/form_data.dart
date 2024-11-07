@@ -45,29 +45,27 @@ class _FormDataState extends State<FormData> {
   Widget _body() {
     return Padding(
       padding: const EdgeInsets.all(10),
-      child: Container(
-        child: FutureBuilder(
-          future: getStoredQuizData(widget.formId),
-          builder: (BuildContext context, AsyncSnapshot snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(
-                child: CircularProgressIndicator.adaptive(),
-              );
-            } else if (snapshot.hasError) {
-              return const Center(
-                child: Text("Error while fetching data"),
-              );
-            } else if (snapshot.hasData) {
-              final List quizData = snapshot.data;
-
-              return formDataTileLong(context, quizData);
-            } else {
-              return const Center(
-                child: Text("Error while getting saved data"),
-              );
-            }
-          },
-        ),
+      child: FutureBuilder(
+        future: getStoredQuizData(widget.formId),
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator.adaptive(),
+            );
+          } else if (snapshot.hasError) {
+            return const Center(
+              child: Text("Error while fetching data"),
+            );
+          } else if (snapshot.hasData) {
+            final List quizData = snapshot.data;
+      
+            return formDataTileLong(context, quizData);
+          } else {
+            return const Center(
+              child: Text("Error while getting saved data"),
+            );
+          }
+        },
       ),
     );
   }
