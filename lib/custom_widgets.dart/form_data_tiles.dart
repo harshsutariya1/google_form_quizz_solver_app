@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:quizz_app/Screens/form_data.dart';
+import 'package:quizz_app/services/api_services.dart';
 
 Widget formDataTileShort(
   BuildContext context,
@@ -96,6 +97,8 @@ Widget formDataTileLong(
   List formData,
 ) {
   final List questions = formData.sublist(1);
+  final formDetails = formData.first;
+  print(formDetails);
   return Container(
     padding: const EdgeInsets.all(10),
     child: SingleChildScrollView(
@@ -107,7 +110,19 @@ Widget formDataTileLong(
             "${formData[0]['header']}",
             style: Theme.of(context).textTheme.headlineLarge,
           ),
-          Text("\nNo of Questions: ${questions.length}"),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("\nNo of Questions: ${questions.length}"),
+              TextButton(
+                onPressed: () {
+                  // selenium code
+                  autoFillGoogleForm(googleFormLink: formDetails['form_link'],ifsuccessCode: (response) {});
+                },
+                child: const Text("Open Google Form"),
+              ),
+            ],
+          ),
           const Divider(thickness: 2),
           const SizedBox(height: 10),
           ...questions.asMap().entries.map((entry) {

@@ -93,9 +93,7 @@ def get_quiz_data(google_form_link: str = "https://forms.gle/QTovj8DYWRXAQdu67")
     except Exception as error:
         print("An error occurred:", error)
 
-    # print("Returned: \n",quiz_data)
     return quiz_data
-
 
 @app.post("/generate_response")
 async def generate_response(request: Request):
@@ -135,7 +133,7 @@ async def generate_response(request: Request):
                 # model="gpt-3.5-turbo-0125",
                 model= openAiModel,
                 messages=[
-                    {"role": "system", "content": "you will get a question with options, return answer in one line or return correct option with description in one line, give funny answer for personal questions."},
+                    {"role": "system", "content": "you will get a question with options, return answer in one line or return correct option, give no answer for personal questions."},
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0,
@@ -153,9 +151,6 @@ async def generate_response(request: Request):
             prompt_tokens += usage.prompt_tokens
             completion_token += usage.completion_tokens
             
-            # print(f"Question: {question_text}")
-            # print(f"Answer: {answer}\n")
-
         except Exception as e:
             print(f"Error generating answer for question '{question}': {e}")
             raise HTTPException(status_code=500, detail="Error generating response")
@@ -168,3 +163,7 @@ async def generate_response(request: Request):
     
     # Return the list of answers
     return answers
+
+@app.get("/auto_fill_googleForm")
+def open_google_form(google_form_link: str = "https://forms.gle/QTovj8DYWRXAQdu67"):
+    print("Opening google form...")

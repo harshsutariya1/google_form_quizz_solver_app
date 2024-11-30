@@ -22,7 +22,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String openAiModel = "gpt-3.5-turbo-0125";
   double totalTokenUsed = 0;
   double totalCost = 0;
-  int totalResponses = 0;
+  double totalResponses = 0;
   TextEditingController inputField = TextEditingController();
 
   @override
@@ -32,6 +32,7 @@ class _MyHomePageState extends State<MyHomePage> {
       totalTokenUsed = usage[0];
       totalCost = usage[1];
       totalResponses = usage[2];
+    // print("usage details: $totalTokenUsed $totalCost $totalResponses");
     });
   }
 
@@ -131,10 +132,10 @@ class _MyHomePageState extends State<MyHomePage> {
                   enabled: true,
                   child: Text("gpt-3.5-turbo-0125"),
                 ),
-                DropdownMenuItem(
-                  value: "gpt-3.5-turbo-0613",
-                  child: Text("gpt-3.5-turbo-0613"),
-                ),
+                // DropdownMenuItem(
+                //   value: "gpt-3.5-turbo-0613",
+                //   child: Text("gpt-3.5-turbo-0613"),
+                // ),
                 DropdownMenuItem(
                   value: "gpt-3.5-turbo-1106",
                   child: Text("gpt-3.5-turbo-1106"),
@@ -142,6 +143,10 @@ class _MyHomePageState extends State<MyHomePage> {
                 DropdownMenuItem(
                   value: "gpt-4o-mini",
                   child: Text("gpt-4o-mini"),
+                ),
+                DropdownMenuItem(
+                  value: "chatgpt-4o-latest",
+                  child: Text("chatgpt-4o-latest"),
                 ),
               ],
               onChanged: (value) {
@@ -202,7 +207,6 @@ class _MyHomePageState extends State<MyHomePage> {
                             );
                           } else if (snapshot.hasData) {
                             final List quizData = snapshot.data;
-
                             return formDataTileShort(
                               context,
                               quizData,
@@ -321,6 +325,11 @@ class _MyHomePageState extends State<MyHomePage> {
         if (value) {
           //Get answers from ai
           List<dynamic> generatedAnswers = [];
+          Map<String, dynamic> usageDetails = {
+            "token_used": 0,
+            "total_cost": 0,
+          };
+
           generateResponse(
             questions: quizData.sublist(1),
             openAiModel: openAiModel,
@@ -331,13 +340,17 @@ class _MyHomePageState extends State<MyHomePage> {
               print("Got Response: $answers");
               generatedAnswers = answers.sublist(0, answers.length - 1);
               final tokenUsed = double.parse(answers.last);
-              await updateUsageDetails(totalTokenUsed: tokenUsed);
+              final usage = await updateUsageDetails(totalTokenUsed: tokenUsed);
+              usageDetails['token_used'] = await usage['token_used'];
+              usageDetails['total_cost'] = await usage['total_cost'];
+              // print("Usage Data: $usageDetails");
             },
           ).then((value) {
             // Save QuizData
             saveQuizData(
               quizData: quizData,
               answersList: generatedAnswers,
+              usageDetails: usageDetails,
             ).then((value) {
               // Navigate to show data screen
               if (value[0]) {

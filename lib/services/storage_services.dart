@@ -15,7 +15,7 @@ Future<List<String>> getListOfFormIds() async {
 
 Future<List<String>> getFormData(String formID) async {
   final SharedPreferences sp = await SharedPreferences.getInstance();
-  // {"formId": ["formLink", "formHeader", "questionsListId"]}
+  // {"formId": ["formLink", "formHeader", "questionsListId", "tokenUsed", "totalCost"]}
   return sp.getStringList(formID) ?? [];
 }
 
@@ -37,6 +37,10 @@ Future<List<String>> getQuestionOptions(String questionOptionsId) async {
   final result = sp.getStringList(questionOptionsId);
   return result ?? [];
 }
+
+//____________________________________________________________________________//
+//____________________________________________________________________________//
+//____________________________________________________________________________//
 
 Future<String> setQuestionOptionsData({required List<String> options}) async {
   final SharedPreferences sp = await SharedPreferences.getInstance();
@@ -71,6 +75,8 @@ Future<String> setFormData({
   required String formLink,
   required String formHeader,
   required String questionsListId,
+  required String tokenUsed,
+  required String totalCost,
 }) async {
   final SharedPreferences sp = await SharedPreferences.getInstance();
   final String uuid = generateId();
@@ -78,6 +84,8 @@ Future<String> setFormData({
     formLink,
     formHeader,
     questionsListId,
+    tokenUsed,
+    totalCost,
   ]);
   return result ? uuid : "";
 }
@@ -103,13 +111,21 @@ void clearAllStoredSp() async {
   sp.clear();
 }
 
+//____________________________________________________________________________//
+//____________________________________________________________________________//
+//____________________________________________________________________________//
+
 Future<List<dynamic>> saveQuizData({
   required List<dynamic> quizData,
   required List<dynamic> answersList,
+  required Map<String, dynamic> usageDetails,
 }) async {
   try {
     final formLink = quizData[0]['form_link'];
     final formHeader = quizData[0]['header'];
+    final tokenUsed = usageDetails["token_used"];
+    final totalCost = usageDetails["total_cost"];
+    print("Saved values: tokenUsed: $tokenUsed and totalCost: $totalCost");
     final List<dynamic> questionsList = quizData.sublist(1);
 
     if (questionsList.length == answersList.length) {
@@ -141,6 +157,8 @@ Future<List<dynamic>> saveQuizData({
         formLink: formLink,
         formHeader: formHeader,
         questionsListId: questionsListId,
+        tokenUsed: tokenUsed.toString(),
+        totalCost: totalCost.toString(),
       );
 
       // Store form ID
@@ -162,15 +180,25 @@ Future<List<dynamic>> getStoredQuizData(String formId) async {
     String formLink = "";
     String formHeader = "";
     String questionsListId = "";
+    String tokenUsed = "";
+    String totalCost = "";
 
     // Step 1: Fetch form data (link, header, questionsListId)
     List<String> formValues = await getFormData(formId);
+    // print(formValues);
     formLink = formValues[0];
     formHeader = formValues[1];
     questionsListId = formValues[2];
+    tokenUsed = formValues[3];
+    totalCost = formValues[4];
 
     // Add form data to the result list
-    formData.add({"form_link": formLink, "header": formHeader});
+    formData.add({
+      "form_link": formLink,
+      "header": formHeader,
+      "token_used": tokenUsed,
+      "total_cost": totalCost,
+    });
 
     // Step 2: Fetch question IDs based on questionsListId
     List<String> questionIdList = await getQuestionIds(questionsListId);

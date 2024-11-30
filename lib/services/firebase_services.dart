@@ -34,12 +34,12 @@ Future<String> getSecrets({
   return "Link not available.";
 }
 
-Future<void> updateUsageDetails({
+Future<Map<String, dynamic>> updateUsageDetails({
   double totalTokenUsed = 0,
   String aiModel = "gpt-3.5-turbo-0125",
 }) async {
   try {
-    print("Total Token Used: $totalTokenUsed");
+    // print("Total Token Used: $totalTokenUsed");
     final docRef = FirebaseFirestore.instance
         .collection('usage')
         .doc("KIDF1ujzTolENnv81ehP");
@@ -60,7 +60,7 @@ Future<void> updateUsageDetails({
       costPer1kToken = 0.0005;
     }
     totalCost = (totalTokenUsed * costPer1kToken) / 1000;
-    print("total cost of response: \$ $totalCost");
+    // print("total cost of response: \$ $totalCost");
 
     Map<String, dynamic> updatedData = {
       'total_token_used': docSnapshot['total_token_used'] + totalTokenUsed,
@@ -68,8 +68,16 @@ Future<void> updateUsageDetails({
       'total_response_created': docSnapshot['total_response_created'] + 1,
     };
     await docRef.update(updatedData);
+    return {
+      'token_used': totalTokenUsed.toString(),
+      'total_cost': totalCost.toString(),
+    };
   } catch (e) {
     print("Error updating usage data...: $e");
+    return {
+      'token_used': 0,
+      'total_cost': 0,
+    };
   }
 }
 

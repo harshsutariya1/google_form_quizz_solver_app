@@ -7,11 +7,9 @@ class FormData extends StatefulWidget {
   const FormData({
     super.key,
     this.formId = "",
-    // this.openAiAnswers = const [],
   });
 
   final String formId;
-  // final List<dynamic> openAiAnswers;
   @override
   State<FormData> createState() => _FormDataState();
 }
@@ -58,7 +56,7 @@ class _FormDataState extends State<FormData> {
             );
           } else if (snapshot.hasData) {
             final List quizData = snapshot.data;
-      
+
             return formDataTileLong(context, quizData);
           } else {
             return const Center(

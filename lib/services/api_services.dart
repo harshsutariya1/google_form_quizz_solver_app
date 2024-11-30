@@ -33,6 +33,36 @@ Future<bool> fetchQuizData({
   }
 }
 
+Future<bool> autoFillGoogleForm({
+  String googleFormLink = "https://forms.gle/QTovj8DYWRXAQdu67",
+  required void Function(Response response) ifsuccessCode,
+}) async {
+  try {
+    if (googleFormLink.contains("forms.gle") ||
+        googleFormLink.contains("docs.google.com")) {
+      print("Opening Google form...");
+      final apiLink = await getSecrets(laptopLocalhostIpLink: true);
+      final response = await http.get(
+        Uri.parse(
+          '$apiLink/auto_fill_googleForm?google_form_link=$googleFormLink',
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        ifsuccessCode(response);
+        return true;
+      } else {
+        throw Exception('Failed to open link');
+      }
+    } else {
+      throw Exception("Please Enter valid Google Form link");
+    }
+  } catch (e) {
+    print("Failed to open link: $e");
+    return false;
+  }
+}
+
 Future<void> generateResponse({
   required List questions,
   required String openAiModel,
